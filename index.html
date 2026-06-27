@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>クリックゲーム - zoi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #startScreen, #gameScreen, #endScreen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #startScreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+        }
+
+        #gameScreen {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: none;
+        }
+
+        #endScreen {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: none;
+        }
+
+        .start-content {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 50px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .start-content h1 {
+            font-size: 60px;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .start-content p {
+            font-size: 18px;
+            color: #ddd;
+            margin-bottom: 40px;
+        }
+
+        .author {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .input-group {
+            margin: 30px 0;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 18px;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .input-group input {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 2px solid white;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 300px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: 0.3s;
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .input-group input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin: 10px;
+        }
+
+        .btn-start {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-start:hover {
+            background: #ff5252;
+            transform: scale(1.05);
+        }
+
+        .btn-restart {
+            background: #4ecdc4;
+            color: white;
+        }
+
+        .btn-restart:hover {
+            background: #45b7aa;
+            transform: scale(1.05);
+        }
+
+        #gameArea {
+            position: relative;
+            width: 90vw;
+            height: 60vh;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
+        #clickBtn {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border: none;
+            border-radius: 50%;
+            background: radial-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.1s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #clickBtn:hover {
+            transform: scale(1.15);
+        }
+
+        #clickBtn:active {
+            transform: scale(0.95);
+        }
+
+        .game-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .game-info div {
+            margin: 5px 0;
+        }
+
+        .game-info .label {
+            display: inline-block;
+            width: 60px;
+            font-weight: bold;
+        }
+
+        .game-info .value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffff00;
+        }
+
+        .end-content {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .end-content h2 {
+            font-size: 50px;
+            color: white;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .stats {
+            font-size: 24px;
+            color: white;
+            margin: 20px 0;
+        }
+
+        .stats span {
+            font-weight: bold;
+            color: #ffff00;
+        }
+
+        .ranking-section {
+            margin-top: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .ranking-section h3 {
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .ranking-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 5px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .ranking-item .rank {
+            font-weight: bold;
+            color: #ffff00;
+            min-width: 30px;
+        }
+
+        .ranking-item .name {
+            flex: 1;
+            text-align: left;
+            padding-left: 20px;
+        }
+
+        .ranking-item .score {
+            font-weight: bold;
+            min-width: 100px;
+            text-align: right;
+        }
+
+        /* レスポンシブデザイン - タブレット・スマホ対応 */
+        @media (max-width: 1024px) {
+            .start-content {
+                padding: 30px 20px;
+                width: 90%;
+                max-width: 500px;
+            }
+
+            .start-content h1 {
+                font-size: 45px;
+            }
+
+            .start-content p {
+                font-size: 16px;
+            }
+
+            #gameArea {
+                width: 95vw;
+                height: 70vh;
+            }
+
+            #clickBtn {
+                width: 70px;
+                height: 70px;
+                font-size: 14px;
+            }
+
+            .game-info {
+                font-size: 14px;
+                padding: 10px 15px;
+            }
+
+            .game-title {
+                font-size: 32px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .start-content {
+                padding: 20px 15px;
+                width: 90%;
+            }
+
+            .start-content h1 {
+                font-size: 36px;
+                margin-bottom: 15px;
+            }
+
+            .start-content p {
+                font-size: 14px;
+                margin-bottom: 25px;
+            }
+
+            .author {
+                font-size: 12px;
+            }
+
+            .input-group {
+                margin: 20px 0;
+            }
+
+            .input-group label {
+                font-size: 14px;
+            }
+
+            .input-group input {
+                padding: 10px 15px;
+                font-size: 14px;
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .btn {
+                padding: 12px 30px;
+                font-size: 16px;
+            }
+
+            #gameArea {
+                width: 95vw;
+                height: 75vh;
+                max-height: 600px;
+            }
+
+            #clickBtn {
+                width: 65px;
+                height: 65px;
+                font-size: 12px;
+            }
+
+            #clickBtn:hover {
+                transform: scale(1.12);
+            }
+
+            .game-info {
+                top: 15px;
+                left: 15px;
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+
+            .game-info .value {
+                font-size: 16px;
+            }
+
+            .game-title {
+                font-size: 28px;
+                top: 20px;
+            }
+
+            .end-content {
+                width: 90%;
+                max-width: 450px;
+                padding: 30px 20px;
+            }
+
+            .end-content h2 {
+                font-size: 36px;
+                margin-bottom: 20px;
+            }
+
+            .stats {
+                font-size: 18px;
+                margin: 15px 0;
+            }
+
+            .ranking-section {
+                max-height: 250px;
+                margin-top: 20px;
+                padding: 15px;
+            }
+
+            .ranking-section h3 {
+                margin-bottom: 10px;
+                font-size: 16px;
+            }
+
+            .ranking-item {
+                padding: 8px 10px;
+                margin: 4px 0;
+                font-size: 13px;
+            }
+
+            .ranking-item .rank {
+                min-width: 25px;
+            }
+
+            .ranking-item .score {
+                min-width: 80px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                font-size: 14px;
+            }
+
+            .start-content {
+                padding: 15px 12px;
+                border-radius: 15px;
+            }
+
+            .start-content h1 {
+                font-size: 28px;
+                margin-bottom: 10px;
+            }
+
+            .start-content p {
+                font-size: 12px;
+                margin-bottom: 20px;
+            }
+
+            .author {
+                font-size: 11px;
+                margin-top: 8px;
+            }
+
+            .input-group {
+                margin: 15px 0;
+            }
+
+            .input-group label {
+                font-size: 12px;
+                margin-bottom: 8px;
+            }
+
+            .input-group input {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
+            .btn {
+                padding: 12px 25px;
+                font-size: 14px;
+                margin: 8px;
+            }
+
+            #gameArea {
+                width: 98vw;
+                height: 80vh;
+                max-height: 500px;
+                border-radius: 15px;
+            }
+
+            #clickBtn {
+                width: 60px;
+                height: 60px;
+                font-size: 11px;
+            }
+
+            #clickBtn:hover {
+                transform: scale(1.1);
+            }
+
+            .game-info {
+                top: 10px;
+                left: 10px;
+                font-size: 11px;
+                padding: 6px 10px;
+                border-radius: 8px;
+            }
+
+            .game-info .label {
+                width: 50px;
+                font-size: 10px;
+            }
+
+            .game-info .value {
+                font-size: 13px;
+            }
+
+            .game-info div {
+                margin: 3px 0;
+            }
+
+            .game-title {
+                font-size: 22px;
+                top: 15px;
+            }
+
+            .author-footer {
+                bottom: 10px;
+                left: 10px;
+                font-size: 12px;
+            }
+
+            .end-content {
+                width: 95%;
+                max-width: 100%;
+                padding: 20px 15px;
+                border-radius: 15px;
+            }
+
+            .end-content h2 {
+                font-size: 28px;
+                margin-bottom: 15px;
+            }
+
+            .stats {
+                font-size: 14px;
+                margin: 10px 0;
+            }
+
+            .ranking-section {
+                max-height: 200px;
+                margin-top: 15px;
+                padding: 12px;
+            }
+
+            .ranking-section h3 {
+                margin-bottom: 8px;
+                font-size: 14px;
+            }
+
+            .ranking-item {
+                padding: 6px 8px;
+                margin: 3px 0;
+                font-size: 12px;
+            }
+
+            .ranking-item .name {
+                padding-left: 10px;
+            }
+        }
+
+        .game-title {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .author-footer {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            z-index: 100;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- スタート画面 -->
+        <div id="startScreen">
+            <div class="start-content">
+                <h1>⚡ クリックゲーム</h1>
+                <p>できるだけ多くクリックしよう！</p>
+                <div class="author">作者：zoi_jp</div>
+                
+                <div class="input-group">
+                    <label for="playerName">プレイヤー名を入力:</label>
+                    <input type="text" id="playerName" placeholder="あなたの名前" maxlength="20">
+                </div>
+                
+                <button class="btn btn-start" onclick="startGame()">ゲーム開始</button>
+            </div>
+        </div>
+
+        <!-- ゲーム画面 -->
+        <div id="gameScreen">
+            <div class="game-title">⚡ クリックゲーム</div>
+            <div id="gameArea">
+                <button id="clickBtn">クリック！</button>
+                <div class="game-info">
+                    <div>プレイヤー: <span id="displayName">Player</span></div>
+                    <div><span class="label">スコア:</span> <span class="value" id="scoreDisplay">0</span></div>
+                    <div><span class="label">時間:</span> <span class="value" id="timeDisplay">60</span>s</div>
+                    <div><span class="label">CPS:</span> <span class="value" id="cpsDisplay">0.0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ゲーム終了画面 -->
+        <div id="endScreen">
+            <div class="end-content">
+                <h2>🎮 ゲーム終了！</h2>
+                
+                <div class="stats">
+                    プレイヤー: <span id="endPlayerName">Player</span>
+                </div>
+                <div class="stats">
+                    スコア: <span id="endScore">0</span>
+                </div>
+                <div class="stats">
+                    CPS: <span id="endCps">0.0</span>
+                </div>
+
+                <div class="ranking-section">
+                    <h3>🏆 ローカルランキング (Top 10)</h3>
+                    <div id="rankingList"></div>
+                </div>
+
+                <button class="btn btn-restart" onclick="restartGame()">もう一度プレイ</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ゲーム変数
+        let gameState = {
+            score: 0,
+            time: 60,
+            startTime: 0,
+            playerName: '',
+            gameActive: false,
+            timerInterval: null
+        };
+
+        // ローカルストレージから最高スコア取得
+        function getRanking() {
+            const data = localStorage.getItem('clickGameRanking');
+            const parsedData = data ? JSON.parse(data) : { lastResetDate: null, rankings: [] };
+            
+            // 日本時間での現在日付を取得（YYYY-MM-DD形式）
+            const japanDate = new Date(Date.now() + 9 * 60 * 60 * 1000);
+            const currentDate = japanDate.toISOString().split('T')[0];
+            
+            // 初回か前回のリセット日付がない場合
+            if (!parsedData.lastResetDate) {
+                parsedData.lastResetDate = currentDate;
+                localStorage.setItem('clickGameRanking', JSON.stringify(parsedData));
+                return parsedData.rankings;
+            }
+            
+            // 前回のリセット日付から現在までの間に月曜日があるかチェック
+            const lastResetDate = new Date(parsedData.lastResetDate);
+            const now = new Date(currentDate);
+            
+            let checkDate = new Date(lastResetDate);
+            checkDate.setDate(checkDate.getDate() + 1); // 翌日から確認
+            
+            let foundMonday = false;
+            while (checkDate <= now) {
+                if (checkDate.getDay() === 1) { // 月曜日（getDay()で1 = 月曜日）
+                    foundMonday = true;
+                    break;
+                }
+                checkDate.setDate(checkDate.getDate() + 1);
+            }
+            
+            // 月曜日が見つかったらリセット
+            if (foundMonday) {
+                parsedData.rankings = [];
+                parsedData.lastResetDate = currentDate;
+                localStorage.setItem('clickGameRanking', JSON.stringify(parsedData));
+            }
+            
+            return parsedData.rankings;
+        }
+
+        // ランキングをローカルストレージに保存
+        function saveRanking(ranking) {
+            const data = {
+                lastResetDate: new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split('T')[0],
+                rankings: ranking
+            };
+            localStorage.setItem('clickGameRanking', JSON.stringify(data));
+        }
+
+        // クリック音を生成（Web Audio API使用）
+        function playClickSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } catch (e) {
+                console.log('Audio API not available');
+            }
+        }
+
+        // ボタンをランダムな位置に移動
+        function moveButton() {
+            const gameArea = document.getElementById('gameArea');
+            const btn = document.getElementById('clickBtn');
+            
+            const maxX = gameArea.clientWidth - 80;
+            const maxY = gameArea.clientHeight - 80;
+            
+            const x = Math.random() * maxX;
+            const y = Math.random() * maxY;
+            
+            btn.style.left = x + 'px';
+            btn.style.top = y + 'px';
+        }
+
+        // クリックハンドラー
+        function handleClick() {
+            if (!gameState.gameActive) return;
+            
+            gameState.score++;
+            document.getElementById('scoreDisplay').textContent = gameState.score;
+            
+            const currentCps = gameState.score / ((Date.now() - gameState.startTime) / 1000);
+            document.getElementById('cpsDisplay').textContent = currentCps.toFixed(2);
+            
+            playClickSound();
+            moveButton();
+        }
+
+        // タイマー開始
+        function startTimer() {
+            gameState.timerInterval = setInterval(() => {
+                gameState.time--;
+                document.getElementById('timeDisplay').textContent = gameState.time;
+                
+                if (gameState.time <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        // ゲーム開始
+        function startGame() {
+            const playerName = document.getElementById('playerName').value.trim();
+            
+            if (!playerName) {
+                alert('プレイヤー名を入力してください');
+                return;
+            }
+            
+            gameState.playerName = playerName;
+            gameState.score = 0;
+            gameState.time = 60;
+            gameState.gameActive = true;
+            gameState.startTime = Date.now();
+            
+            document.getElementById('displayName').textContent = playerName;
+            document.getElementById('scoreDisplay').textContent = '0';
+            document.getElementById('cpsDisplay').textContent = '0.0';
+            document.getElementById('timeDisplay').textContent = '60';
+            
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'flex';
+            document.getElementById('endScreen').style.display = 'none';
+            
+            moveButton();
+            startTimer();
+        }
+
+        // ゲーム終了
+        function endGame() {
+            gameState.gameActive = false;
+            clearInterval(gameState.timerInterval);
+            
+            const finalCps = gameState.score / 60;
+            
+            // ランキングに追加
+            let ranking = getRanking();
+            ranking.push({
+                name: gameState.playerName,
+                score: gameState.score,
+                cps: finalCps.toFixed(2)
+            });
+            
+            // スコア順でソート（降順）
+            ranking.sort((a, b) => b.score - a.score);
+            
+            // 重複排除（同じプレイヤーと同じスコアは除く）
+            ranking = ranking.slice(0, 100);
+            
+            saveRanking(ranking);
+            
+            // ゲーム終了画面に表示
+            document.getElementById('endPlayerName').textContent = gameState.playerName;
+            document.getElementById('endScore').textContent = gameState.score;
+            document.getElementById('endCps').textContent = finalCps.toFixed(2);
+            
+            // ランキング表示
+            const rankingList = document.getElementById('rankingList');
+            rankingList.innerHTML = '';
+            
+            ranking.slice(0, 10).forEach((entry, index) => {
+                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`;
+                const item = document.createElement('div');
+                item.className = 'ranking-item';
+                item.innerHTML = `
+                    <span class="rank">${medal}</span>
+                    <span class="name">${entry.name}</span>
+                    <span class="score">${entry.score} (${entry.cps} CPS)</span>
+                `;
+                rankingList.appendChild(item);
+            });
+            
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('endScreen').style.display = 'flex';
+        }
+
+        // ゲームリスタート
+        function restartGame() {
+            document.getElementById('playerName').value = '';
+            document.getElementById('startScreen').style.display = 'flex';
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('endScreen').style.display = 'none';
+        }
+
+        // クリックボタンのイベントリスナー
+        document.getElementById('clickBtn').addEventListener('click', handleClick);
+        
+        // タッチイベント対応（スマートフォン・タブレット）
+        document.getElementById('clickBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleClick();
+        });
+
+        // Enterキーでゲーム開始
+        document.getElementById('playerName').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                startGame();
+            }
+        });
+    </script>
+
+    <div class="author-footer">作者：zoi_jp</div>
+</body>
+</html>
